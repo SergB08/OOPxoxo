@@ -11,83 +11,77 @@ public class MenuForm : Form
 
     private void BuildUI()
     {
-        this.Text            = "Хрестики-нулики";
-        this.Size            = new Size(320, 340);
-        this.MinimumSize     = this.Size;
-        this.MaximumSize     = this.Size;
-        this.StartPosition   = FormStartPosition.CenterScreen;
-        this.BackColor       = Color.FromArgb(212, 208, 200);
-        this.Font            = new Font("Tahoma", 8f);
+        this.Text = "Хрестики-нулики";
+        this.Size = new Size(320, 380);
+        this.MinimumSize = this.Size;
+        this.MaximumSize = this.Size;
+        this.StartPosition = FormStartPosition.CenterScreen;
+        this.BackColor = Color.FromArgb(212, 208, 200);
+        this.Font = new Font("Tahoma", 8f);
         this.FormBorderStyle = FormBorderStyle.FixedDialog;
-        this.MaximizeBox     = false;
+        this.MaximizeBox = false;
 
         // Title banner
         var banner = new Panel
         {
-            Dock      = DockStyle.Top,
-            Height    = 90,
+            Left = 0,
+            Top = 0,
+            Width = 320,
+            Height = 90,
+            Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right,
             BackColor = Color.FromArgb(58, 110, 165),
         };
-        var titleLabel = new Label
+        banner.Controls.Add(new Label
         {
-            Text      = "Хрестики-нулики",
-            Dock      = DockStyle.Fill,
+            Text = "Хрестики-нулики",
+            Dock = DockStyle.Fill,
             TextAlign = ContentAlignment.MiddleCenter,
             ForeColor = Color.White,
-            Font      = new Font("Tahoma", 16f, FontStyle.Bold),
+            Font = new Font("Tahoma", 16f, FontStyle.Bold),
             BackColor = Color.Transparent,
-        };
-        var subtitleLabel = new Label
+        });
+        banner.Controls.Add(new Label
         {
-            Text      = "Нескінченне поле",
-            Dock      = DockStyle.Bottom,
-            Height    = 22,
+            Text = "Нескінченне поле",
+            Dock = DockStyle.Bottom,
+            Height = 22,
             TextAlign = ContentAlignment.MiddleCenter,
             ForeColor = Color.FromArgb(180, 210, 240),
-            Font      = new Font("Tahoma", 9f, FontStyle.Italic),
+            Font = new Font("Tahoma", 9f, FontStyle.Italic),
             BackColor = Color.Transparent,
-        };
-        banner.Controls.Add(titleLabel);
-        banner.Controls.Add(subtitleLabel);
+        });
         this.Controls.Add(banner);
 
-        // Button container
-        var btnPanel = new Panel
+        // Buttons — positioned below the banner
+        int btnX = 60, btnW = 200, btnH = 36, gap = 48;
+        int startY = 110;
+
+        Button Make(string text, int top) => new Button
         {
-            Dock      = DockStyle.Fill,
-            BackColor = Color.Transparent,
-            Padding   = new Padding(60, 20, 60, 20),
-        };
-
-        var btnPlay     = MenuButton("▶  Грати",       0);
-        var btnHelp     = MenuButton("?  Довідка",     44);
-        var btnSettings = MenuButton("⚙  Налаштування",88);
-
-        btnPlay.Click     += (_, _) => OpenGame();
-        btnHelp.Click     += (_, _) => new HelpForm().ShowDialog(this);
-        btnSettings.Click += (_, _) => { new SettingsForm().ShowDialog(this); };
-
-        btnPanel.Controls.AddRange(new Control[] { btnPlay, btnHelp, btnSettings });
-        this.Controls.Add(btnPanel);
-        banner.BringToFront();
-    }
-
-    private static Button MenuButton(string text, int topOffset)
-    {
-        return new Button
-        {
-            Text      = text,
-            Left      = 0, Top  = topOffset,
-            Width     = 200, Height = 36,
-            Anchor    = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right,
+            Text = text,
+            Left = btnX,
+            Top = top,
+            Width = btnW,
+            Height = btnH,
             FlatStyle = FlatStyle.System,
-            Font      = new Font("Tahoma", 10f),
+            Font = new Font("Tahoma", 10f),
         };
+
+        var btnPlay = Make("▶  Грати", startY);
+        var btnSettings = Make("⚙  Налаштування", startY + gap);
+        var btnHelp = Make("?  Довідка", startY + gap * 2);
+        var btnExit = Make("✕  Вихід", startY + gap * 3);
+
+        btnPlay.Click += (_, _) => OpenGame();
+        btnSettings.Click += (_, _) => new SettingsForm().ShowDialog(this);
+        btnHelp.Click += (_, _) => new HelpForm().ShowDialog(this);
+        btnExit.Click += (_, _) => Application.Exit();
+
+        this.Controls.AddRange(new Control[] { btnPlay, btnSettings, btnHelp, btnExit });
     }
 
     private void OpenGame()
     {
-        // Ask for mode via a small dialog
         using var modeForm = new ModeSelectForm();
         if (modeForm.ShowDialog(this) != DialogResult.OK) return;
 

@@ -5,7 +5,7 @@ public class HelpForm : Form
     public HelpForm()
     {
         this.Text            = "Довідка";
-        this.Size            = new Size(380, 280);
+        this.Size            = new Size(380, 230);
         this.MinimumSize     = this.Size;
         this.MaximumSize     = this.Size;
         this.StartPosition   = FormStartPosition.CenterParent;
@@ -14,7 +14,6 @@ public class HelpForm : Form
         this.FormBorderStyle = FormBorderStyle.FixedDialog;
         this.MaximizeBox     = false;
 
-        // Header
         var header = new Panel
         {
             Dock      = DockStyle.Top,
@@ -32,52 +31,43 @@ public class HelpForm : Form
         });
         this.Controls.Add(header);
 
-        // Controls table
         var rows = new[]
         {
-            ("ЛКМ (ліва кнопка миші)",        "Поставити свій символ на поле"),
-            ("ПКМ + перетягування",            "Панорамування (переміщення поля)"),
-            ("Колесо миші",                    "Прокрутка вгору / вниз"),
-            ("Ctrl + Колесо миші",             "Прокрутка вліво / вправо"),
-            ("Кнопка «Нова гра»",              "Почати нову партію"),
-            ("Кнопка «Скинути рахунок»",       "Обнулити рахунок обох гравців"),
+            ("ЛКМ (ліва кнопка миші)",   "Поставити символ на поле"),
+            ("Колесо миші",              "Прокрутка вгору / вниз"),
+            ("Ctrl + Колесо миші",       "Прокрутка вліво / вправо"),
         };
 
         int y = 46;
         foreach (var (key, desc) in rows)
         {
-            var keyLbl = new Label
+            this.Controls.Add(new Label
             {
                 Text      = key,
                 Left = 12, Top = y, Width = 170, Height = 28,
                 TextAlign = ContentAlignment.MiddleLeft,
                 Font      = new Font("Tahoma", 8f, FontStyle.Bold),
                 BackColor = Color.Transparent,
-            };
-            var descLbl = new Label
+            });
+            this.Controls.Add(new Label
             {
                 Text      = desc,
                 Left = 186, Top = y, Width = 178, Height = 28,
                 TextAlign = ContentAlignment.MiddleLeft,
                 BackColor = Color.Transparent,
-            };
-            this.Controls.Add(keyLbl);
-            this.Controls.Add(descLbl);
-
-            // separator line
-            var sep = new Panel
+            });
+            this.Controls.Add(new Panel
             {
                 Left = 12, Top = y + 28, Width = 350, Height = 1,
                 BackColor = Color.FromArgb(160, 160, 160),
-            };
-            this.Controls.Add(sep);
+            });
             y += 30;
         }
 
         var btnClose = new Button
         {
             Text         = "Закрити",
-            Left = 140, Top = y + 6, Width = 90, Height = 26,
+            Left = 140, Top = y + 8, Width = 90, Height = 26,
             FlatStyle    = FlatStyle.System,
             DialogResult = DialogResult.OK,
         };

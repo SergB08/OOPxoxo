@@ -10,8 +10,8 @@ public partial class MainForm : Form
     // ── Game state ──────────────────────────────────────────────────────────
     private readonly GameBoard _board = new();
     private GameMode  _mode;
-    private CellState _currentPlayer = CellState.X; // X always goes first visually
-    private CellState _humanPlayer   = CellState.O; // in VsComputer: human is O
+    private CellState _currentPlayer = CellState.X;
+    private CellState _humanPlayer   = CellState.O;
     private bool      _gameOver  = false;
     private List<(int, int)>? _winCells;
 
@@ -19,7 +19,7 @@ public partial class MainForm : Form
     private int _scoreO = 0;
 
     // ── View / pan ──────────────────────────────────────────────────────────
-    private Point _viewOffset = Point.Empty;  // board pixel offset
+    private Point _viewOffset = Point.Empty;
     private Point _panStart;
     private bool  _isPanning = false;
     private const int ScorePanelHeight = 56;
@@ -42,8 +42,6 @@ public partial class MainForm : Form
         StartNewGame();
     }
 
-    // ── UI Construction ─────────────────────────────────────────────────────
-
     private void BuildUI()
     {
         this.Text            = "Хрестики-нулики — Нескінченне поле";
@@ -53,7 +51,6 @@ public partial class MainForm : Form
         this.BackColor       = SystemColors.Control;
         this.Font            = new Font("Tahoma", 8f);
 
-        // ── Top toolbar ──────────────────────────────────────────────────
         var toolbar = new Panel
         {
             Dock   = DockStyle.Top,
@@ -82,7 +79,6 @@ public partial class MainForm : Form
         toolbar.Controls.AddRange(new Control[] { _newGameBtn, _resetScoreBtn, _statusLabel });
         this.Controls.Add(toolbar);
 
-        // ── Score panel ───────────────────────────────────────────────────
         _scorePanel = new Panel
         {
             Dock      = DockStyle.Top,
@@ -104,7 +100,6 @@ public partial class MainForm : Form
 
         this.Controls.Add(_scorePanel);
 
-        // ── Board panel ───────────────────────────────────────────────────
         _boardPanel = new Panel
         {
             Dock        = DockStyle.Fill,
@@ -121,7 +116,6 @@ public partial class MainForm : Form
 
         this.Controls.Add(_boardPanel);
 
-        // Make sure paint order: toolbar on top, score below, board fills rest
         toolbar.BringToFront();
         _scorePanel.BringToFront();
     }
@@ -166,8 +160,6 @@ public partial class MainForm : Form
         };
     }
 
-    // ── Game lifecycle ───────────────────────────────────────────────────────
-
     private void StartNewGame()
     {
         _board.Clear();
@@ -175,7 +167,6 @@ public partial class MainForm : Form
         _winCells   = null;
         _viewOffset = Point.Empty;
 
-        // X always moves first. In VsComputer, computer IS X and goes first.
         _currentPlayer = CellState.X;
         _humanPlayer   = (_mode == GameMode.VsComputer) ? CellState.O : CellState.X;
 
@@ -205,11 +196,7 @@ public partial class MainForm : Form
             _scoreOLabel.Text = $"Гравець 2: {_scoreO} ◯";
         }
 
-        if (_gameOver)
-        {
-            // Status is set by the win/draw handler
-        }
-        else
+        if (!_gameOver)
         {
             string whose = "";
             if (_mode == GameMode.VsComputer)
@@ -220,23 +207,19 @@ public partial class MainForm : Form
         }
     }
 
-    // ── Board rendering ──────────────────────────────────────────────────────
-
     private void BoardPanel_Paint(object? sender, PaintEventArgs e)
     {
         var g   = e.Graphics;
         var w   = _boardPanel.ClientSize.Width;
         var h   = _boardPanel.ClientSize.Height;
-        int ox  = _viewOffset.X + w / 2;   // pixel origin = board (0,0)
+        int ox  = _viewOffset.X + w / 2;
         int oy  = _viewOffset.Y + h / 2;
 
-        // Visible cell range
         int colMin = (int)Math.Floor((-ox) / (double)CellSize) - 1;
         int colMax = (int)Math.Ceiling((w - ox) / (double)CellSize) + 1;
         int rowMin = (int)Math.Floor((-oy) / (double)CellSize) - 1;
         int rowMax = (int)Math.Ceiling((h - oy) / (double)CellSize) + 1;
 
-        // Grid lines
         using var gridPen = new Pen(Color.FromArgb(210, 210, 220));
         for (int c = colMin; c <= colMax; c++)
         {
@@ -249,12 +232,10 @@ public partial class MainForm : Form
             g.DrawLine(gridPen, 0, py, w, py);
         }
 
-        // Origin marker
         using var axisPen = new Pen(Color.FromArgb(180, 180, 200), 1.5f);
         g.DrawLine(axisPen, ox, 0, ox, h);
         g.DrawLine(axisPen, 0, oy, w, oy);
 
-        // Pieces
         for (int row = rowMin; row <= rowMax; row++)
         for (int col = colMin; col <= colMax; col++)
         {
@@ -264,8 +245,6 @@ public partial class MainForm : Form
             bool isWinCell = _winCells != null && _winCells.Contains((row, col));
             DrawPiece(g, state, ox + col * CellSize, oy + row * CellSize, isWinCell);
         }
-
-        // Hover hint (show faint marker on empty cells near cursor) — done via cursor styling
     }
 
     private static void DrawPiece(Graphics g, CellState state, int px, int py, bool highlight)
@@ -295,8 +274,6 @@ public partial class MainForm : Form
             g.DrawEllipse(pen, r);
         }
     }
-
-    // ── Input handling ───────────────────────────────────────────────────────
 
     private void BoardPanel_MouseDown(object? sender, MouseEventArgs e)
     {
@@ -338,7 +315,6 @@ public partial class MainForm : Form
 
     private void BoardPanel_MouseWheel(object? sender, MouseEventArgs e)
     {
-        // Scroll zooms/pans
         if (ModifierKeys.HasFlag(Keys.Control))
             _viewOffset = new Point(_viewOffset.X + e.Delta / 4, _viewOffset.Y);
         else
@@ -357,8 +333,6 @@ public partial class MainForm : Form
         return (row, col);
     }
 
-    // ── Move processing ──────────────────────────────────────────────────────
-
     private void PlacePiece(int row, int col)
     {
         _board.SetCell(row, col, _currentPlayer);
@@ -370,7 +344,6 @@ public partial class MainForm : Form
             _gameOver = true;
             _boardPanel.Invalidate();
 
-            bool isHumanWin = (_mode == GameMode.TwoPlayers || _currentPlayer == _humanPlayer);
             if (_mode == GameMode.VsComputer)
             {
                 if (_currentPlayer == _humanPlayer) { _scoreO++; _statusLabel.Text = "🎉 Ви перемогли!"; }
@@ -385,13 +358,11 @@ public partial class MainForm : Form
             return;
         }
 
-        // Switch player
         _currentPlayer = _currentPlayer == CellState.X ? CellState.O : CellState.X;
         UpdateLabels();
 
         if (_mode == GameMode.VsComputer && _currentPlayer != _humanPlayer && !_gameOver)
         {
-            // Delay AI move slightly so UI updates
             var timer = new System.Windows.Forms.Timer { Interval = 120 };
             timer.Tick += (_, _) => { timer.Stop(); MakeComputerMove(); };
             timer.Start();
@@ -419,7 +390,6 @@ public partial class MainForm : Form
         }
     }
 
-    // ── Designer stub ────────────────────────────────────────────────────────
     private void InitializeComponent()
     {
         this.SuspendLayout();
