@@ -44,7 +44,7 @@ public partial class MainForm : Form
 
     private void BuildUI()
     {
-        this.Text            = "Хрестики-нулики — Нескінченне поле";
+        this.Text            = "Хрестики-нулики - Нескінченне поле";
         this.MinimumSize     = new Size(520, 520);
         this.Size            = new Size(640, 640);
         this.StartPosition   = FormStartPosition.CenterScreen;
@@ -187,22 +187,22 @@ public partial class MainForm : Form
     {
         if (_mode == GameMode.VsComputer)
         {
-            _scoreXLabel.Text = $"💻 Комп: {_scoreX}";
-            _scoreOLabel.Text = $"Гравець: {_scoreO} ✖";
+            _scoreXLabel.Text = $"Комп: {_scoreX}";
+            _scoreOLabel.Text = $"Гравець: {_scoreO}";
         }
         else
         {
-            _scoreXLabel.Text = $"✖ Гравець 1: {_scoreX}";
-            _scoreOLabel.Text = $"Гравець 2: {_scoreO} ◯";
+            _scoreXLabel.Text = $"Гравець 1 (X): {_scoreX}";
+            _scoreOLabel.Text = $"Гравець 2 (O): {_scoreO}";
         }
 
         if (!_gameOver)
         {
             string whose = "";
             if (_mode == GameMode.VsComputer)
-                whose = _currentPlayer == _humanPlayer ? "Ваш хід (◯)" : "Комп'ютер думає…";
+                whose = _currentPlayer == _humanPlayer ? "Ваш хід (O)" : "Комп'ютер думає...";
             else
-                whose = _currentPlayer == CellState.X ? "Хід: Гравець 1 (✖)" : "Хід: Гравець 2 (◯)";
+                whose = _currentPlayer == CellState.X ? "Хід: Гравець 1 (X)" : "Хід: Гравець 2 (O)";
             _statusLabel.Text = whose;
         }
     }
@@ -346,13 +346,13 @@ public partial class MainForm : Form
 
             if (_mode == GameMode.VsComputer)
             {
-                if (_currentPlayer == _humanPlayer) { _scoreO++; _statusLabel.Text = "🎉 Ви перемогли!"; }
-                else { _scoreX++; _statusLabel.Text = "🤖 Комп'ютер переміг!"; }
+                if (_currentPlayer == _humanPlayer) { _scoreO++; _statusLabel.Text = "Ви перемогли!"; }
+                else { _scoreX++; _statusLabel.Text = "Комп'ютер переміг!"; }
             }
             else
             {
-                if (_currentPlayer == CellState.X) { _scoreX++; _statusLabel.Text = "🎉 Переміг Гравець 1 (✖)!"; }
-                else { _scoreO++; _statusLabel.Text = "🎉 Переміг Гравець 2 (◯)!"; }
+                if (_currentPlayer == CellState.X) { _scoreX++; _statusLabel.Text = "Переміг Гравець 1 (X)!"; }
+                else { _scoreO++; _statusLabel.Text = "Переміг Гравець 2 (O)!"; }
             }
             UpdateScoreLabels();
             return;
@@ -380,13 +380,13 @@ public partial class MainForm : Form
     {
         if (_mode == GameMode.VsComputer)
         {
-            _scoreXLabel.Text = $"💻 Комп: {_scoreX}";
-            _scoreOLabel.Text = $"Гравець: {_scoreO} ✖";
+            _scoreXLabel.Text = $"Комп: {_scoreX}";
+            _scoreOLabel.Text = $"Гравець: {_scoreO}";
         }
         else
         {
-            _scoreXLabel.Text = $"✖ Гравець 1: {_scoreX}";
-            _scoreOLabel.Text = $"Гравець 2: {_scoreO} ◯";
+            _scoreXLabel.Text = $"Гравець 1 (X): {_scoreX}";
+            _scoreOLabel.Text = $"Гравець 2 (O): {_scoreO}";
         }
     }
 

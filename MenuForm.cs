@@ -67,10 +67,10 @@ public class MenuForm : Form
             Font = new Font("Tahoma", 10f),
         };
 
-        var btnPlay = Make("▶  Грати", startY);
-        var btnSettings = Make("⚙  Налаштування", startY + gap);
-        var btnHelp = Make("?  Довідка", startY + gap * 2);
-        var btnExit = Make("✕  Вихід", startY + gap * 3);
+        var btnPlay = Make("Грати", startY);
+        var btnSettings = Make("Налаштування", startY + gap);
+        var btnHelp = Make("Довідка", startY + gap * 2);
+        var btnExit = Make("Вихід", startY + gap * 3);
 
         btnPlay.Click += (_, _) => OpenGame();
         btnSettings.Click += (_, _) => new SettingsForm().ShowDialog(this);
