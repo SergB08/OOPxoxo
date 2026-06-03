@@ -9,7 +9,7 @@ public class GameBoard
     // Sparse storage: only occupied cells are kept
     private readonly Dictionary<(int row, int col), CellState> _cells = new();
 
-    public const int WinLength = 5; // 5 in a row to win
+    public int WinLength { get; set; } = 5;
 
     public CellState GetCell(int row, int col)
     {
@@ -221,7 +221,7 @@ public static class AiEngine
         {
             int playerCount = 0, emptyCount = 0;
             bool blocked = false;
-            for (int i = 0; i < GameBoard.WinLength; i++)
+            for (int i = 0; i < board.WinLength; i++)
             {
                 int r = startRow + (offset + i) * dr;
                 int c = startCol + (offset + i) * dc;
