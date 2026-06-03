@@ -1,6 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
+	<ApplicationIcon>slimeTemp.ico</ApplicationIcon>
     <OutputType>WinExe</OutputType>
     <TargetFramework>net8.0-windows</TargetFramework>
     <UseWindowsForms>true</UseWindowsForms>
@@ -9,5 +10,6 @@
     <AssemblyName>TicTacToe</AssemblyName>
     <RootNamespace>TicTacToe</RootNamespace>
   </PropertyGroup>
+	
 
 </Project>

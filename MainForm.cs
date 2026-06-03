@@ -2,36 +2,54 @@ namespace TicTacToe;
 
 public partial class MainForm : Form
 {
-    // ── Layout constants ────────────────────────────────────────────────────
-    private const int CellSize    = 44;
-    private const int LineWidth   = 1;
+    // розмір однієї клітинки поля у пікселях
+    private const int CellSize = 44;
+    // товщина ліній сітки
+    private const int LineWidth = 1;
+    // відступ фігури від краю клітинки
     private const int PieceMargin = 6;
 
-    // ── Game state ──────────────────────────────────────────────────────────
+    // ігрове поле зі sparse зберіганням клітинок
     private readonly GameBoard _board = new();
-    private GameMode  _mode;
+    // режим гри: проти комп'ютера або два гравці
+    private GameMode _mode;
+    // чий зараз хід
     private CellState _currentPlayer = CellState.X;
-    private CellState _humanPlayer   = CellState.O;
-    private bool      _gameOver  = false;
+    // яким символом грає людина
+    private CellState _humanPlayer = CellState.O;
+    // чи гра вже завершена
+    private bool _gameOver = false;
+    // клітинки що утворили виграшну лінію
     private List<(int, int)>? _winCells;
 
+    // рахунок гравця X
     private int _scoreX = 0;
+    // рахунок гравця O
     private int _scoreO = 0;
 
-    // ── View / pan ──────────────────────────────────────────────────────────
+    // зміщення камери відносно центру поля
     private Point _viewOffset = Point.Empty;
+    // точка з якої починається панорамування мишею
     private Point _panStart;
-    private bool  _isPanning = false;
+    // чи зараз активне панорамування правою кнопкою миші
+    private bool _isPanning = false;
+    // висота панелі рахунку у пікселях
     private const int ScorePanelHeight = 56;
 
-    // ── Controls ────────────────────────────────────────────────────────────
-    private Panel  _boardPanel  = null!;
-    private Label  _statusLabel = null!;
-    private Label  _scoreXLabel = null!;
-    private Label  _scoreOLabel = null!;
-    private Button _newGameBtn  = null!;
+    // панель на якій малюється ігрове поле
+    private Panel _boardPanel = null!;
+    // підпис що показує чий зараз хід або результат гри
+    private Label _statusLabel = null!;
+    // підпис з рахунком гравця X або комп'ютера
+    private Label _scoreXLabel = null!;
+    // підпис з рахунком гравця O або людини
+    private Label _scoreOLabel = null!;
+    // кнопка нової гри
+    private Button _newGameBtn = null!;
+    // кнопка скидання рахунку
     private Button _resetScoreBtn = null!;
-    private Panel  _scorePanel  = null!;
+    // синя панель зверху де відображається рахунок
+    private Panel _scorePanel = null!;
 
     public MainForm(GameMode mode, int winLength)
     {
@@ -44,55 +62,72 @@ public partial class MainForm : Form
 
     private void BuildUI()
     {
-        this.Text            = "Хрестики-нулики - Нескінченне поле";
-        this.MinimumSize     = new Size(520, 520);
-        this.Size            = new Size(640, 640);
-        this.StartPosition   = FormStartPosition.CenterScreen;
-        this.BackColor       = SystemColors.Control;
-        this.Font            = new Font("Tahoma", 8f);
+        // назва вікна програми
+        this.Text = "Хрестики-нулики - Нескінченне поле";
+        // іконка вікна
+        this.Icon = new Icon("slimeTemp.ico");
+        // мінімальний розмір вікна щоб інтерфейс не ламався
+        this.MinimumSize = new Size(520, 520);
+        // початковий розмір вікна
+        this.Size = new Size(640, 640);
+        // відкриваємо форму по центру екрану
+        this.StartPosition = FormStartPosition.CenterScreen;
+        this.BackColor = SystemColors.Control;
+        this.Font = new Font("Tahoma", 8f);
 
+        // верхня панель з кнопками керування грою
         var toolbar = new Panel
         {
-            Dock   = DockStyle.Top,
+            Dock = DockStyle.Top,
             Height = 32,
             BackColor = Color.FromArgb(212, 208, 200),
         };
+        // додаємо 3д ефект рамки у стилі WinXP
         Xp3DPanel(toolbar);
 
+        // кнопка для початку нової партії
         _newGameBtn = XpButton("Нова гра", 4, 4, 90);
         _newGameBtn.Click += (_, _) => StartNewGame();
 
+        // кнопка для обнулення рахунку обох гравців
         _resetScoreBtn = XpButton("Скинути рахунок", 98, 4, 120);
         _resetScoreBtn.Click += (_, _) => ResetScore();
 
+        // підпис що показує поточний стан гри
         _statusLabel = new Label
         {
-            AutoSize  = false,
+            AutoSize = false,
             TextAlign = ContentAlignment.MiddleLeft,
-            Left      = 226, Top = 0,
-            Width     = 320, Height = 32,
+            Left = 226,
+            Top = 0,
+            Width = 320,
+            Height = 32,
             BackColor = Color.Transparent,
-            Font      = new Font("Tahoma", 8f, FontStyle.Bold),
+            Font = new Font("Tahoma", 8f, FontStyle.Bold),
             ForeColor = Color.FromArgb(0, 0, 128),
         };
 
         toolbar.Controls.AddRange(new Control[] { _newGameBtn, _resetScoreBtn, _statusLabel });
         this.Controls.Add(toolbar);
 
+        // синя панель рахунку під тулбаром
         _scorePanel = new Panel
         {
-            Dock      = DockStyle.Top,
-            Height    = ScorePanelHeight,
+            Dock = DockStyle.Top,
+            Height = ScorePanelHeight,
             BackColor = Color.FromArgb(58, 110, 165),
         };
 
-        _scoreXLabel = ScoreLabel(ContentAlignment.MiddleLeft,  8);
+        // підпис рахунку зліва для X або комп'ютера
+        _scoreXLabel = ScoreLabel(ContentAlignment.MiddleLeft, 8);
+        // підпис рахунку справа для O або людини
         _scoreOLabel = ScoreLabel(ContentAlignment.MiddleRight, 0);
         _scoreOLabel.Anchor = AnchorStyles.Top | AnchorStyles.Right;
-        _scoreOLabel.Left   = _scorePanel.Width - 8 - 230;
+        _scoreOLabel.Left = _scorePanel.Width - 8 - 230;
 
         _scorePanel.Controls.Add(_scoreXLabel);
         _scorePanel.Controls.Add(_scoreOLabel);
+        // при зміні розміру вікна підпис справа залишається прибитим до правого краю
         _scorePanel.SizeChanged += (_, _) =>
         {
             _scoreOLabel.Left = _scorePanel.Width - 8 - 230;
@@ -100,19 +135,22 @@ public partial class MainForm : Form
 
         this.Controls.Add(_scorePanel);
 
+        // основна панель де малюється ігрове поле
         _boardPanel = new Panel
         {
-            Dock        = DockStyle.Fill,
-            BackColor   = Color.White,
+            Dock = DockStyle.Fill,
+            BackColor = Color.White,
             BorderStyle = BorderStyle.Fixed3D,
         };
 
-        _boardPanel.Paint       += BoardPanel_Paint;
-        _boardPanel.MouseDown   += BoardPanel_MouseDown;
-        _boardPanel.MouseMove   += BoardPanel_MouseMove;
-        _boardPanel.MouseUp     += BoardPanel_MouseUp;
-        _boardPanel.MouseWheel  += BoardPanel_MouseWheel;
-        _boardPanel.Resize      += (_, _) => _boardPanel.Invalidate();
+        // підписуємо всі події миші та малювання для ігрового поля
+        _boardPanel.Paint += BoardPanel_Paint;
+        _boardPanel.MouseDown += BoardPanel_MouseDown;
+        _boardPanel.MouseMove += BoardPanel_MouseMove;
+        _boardPanel.MouseUp += BoardPanel_MouseUp;
+        _boardPanel.MouseWheel += BoardPanel_MouseWheel;
+        // при зміні розміру вікна перемальовуємо поле
+        _boardPanel.Resize += (_, _) => _boardPanel.Invalidate();
 
         this.Controls.Add(_boardPanel);
 
@@ -124,11 +162,13 @@ public partial class MainForm : Form
     {
         return new Button
         {
-            Text      = text,
-            Left      = x, Top = y,
-            Width     = w, Height = 23,
+            Text = text,
+            Left = x,
+            Top = y,
+            Width = w,
+            Height = 23,
             FlatStyle = FlatStyle.System,
-            Font      = new Font("Tahoma", 8f),
+            Font = new Font("Tahoma", 8f),
         };
     }
 
@@ -136,13 +176,15 @@ public partial class MainForm : Form
     {
         return new Label
         {
-            AutoSize  = false,
-            Width     = 230, Height = ScorePanelHeight,
-            Left      = left, Top = 0,
+            AutoSize = false,
+            Width = 230,
+            Height = ScorePanelHeight,
+            Left = left,
+            Top = 0,
             TextAlign = align,
             BackColor = Color.Transparent,
             ForeColor = Color.White,
-            Font      = new Font("Tahoma", 14f, FontStyle.Bold),
+            Font = new Font("Tahoma", 14f, FontStyle.Bold),
         };
     }
 
@@ -153,26 +195,32 @@ public partial class MainForm : Form
             var g = e.Graphics;
             var r = ((Panel)s!).ClientRectangle;
             using var lightPen = new Pen(Color.White);
-            using var darkPen  = new Pen(Color.FromArgb(128, 128, 128));
+            using var darkPen = new Pen(Color.FromArgb(128, 128, 128));
             g.DrawLine(lightPen, r.Left, r.Top, r.Right, r.Top);
-            g.DrawLine(lightPen, r.Left, r.Top, r.Left,  r.Bottom);
-            g.DrawLine(darkPen,  r.Left, r.Bottom-1, r.Right, r.Bottom-1);
+            g.DrawLine(lightPen, r.Left, r.Top, r.Left, r.Bottom);
+            g.DrawLine(darkPen, r.Left, r.Bottom - 1, r.Right, r.Bottom - 1);
         };
     }
 
     private void StartNewGame()
     {
+        // очищаємо поле від усіх фігур
         _board.Clear();
-        _gameOver   = false;
-        _winCells   = null;
+        // скидаємо стан завершення гри
+        _gameOver = false;
+        _winCells = null;
+        // повертаємо камеру до центру поля
         _viewOffset = Point.Empty;
 
+        // X завжди ходить першим
         _currentPlayer = CellState.X;
-        _humanPlayer   = (_mode == GameMode.VsComputer) ? CellState.O : CellState.X;
+        // у режимі проти комп'ютера людина грає за O
+        _humanPlayer = (_mode == GameMode.VsComputer) ? CellState.O : CellState.X;
 
         UpdateLabels();
         _boardPanel.Invalidate();
 
+        // якщо грає комп'ютер то він робить перший хід у центр
         if (_mode == GameMode.VsComputer)
             MakeComputerMove();
     }
@@ -209,50 +257,58 @@ public partial class MainForm : Form
 
     private void BoardPanel_Paint(object? sender, PaintEventArgs e)
     {
-        var g   = e.Graphics;
-        var w   = _boardPanel.ClientSize.Width;
-        var h   = _boardPanel.ClientSize.Height;
-        int ox  = _viewOffset.X + w / 2;
-        int oy  = _viewOffset.Y + h / 2;
+        var g = e.Graphics;
+        var w = _boardPanel.ClientSize.Width;
+        var h = _boardPanel.ClientSize.Height;
+        // ox та oy це координати центру поля на екрані з урахуванням зміщення камери
+        int ox = _viewOffset.X + w / 2;
+        int oy = _viewOffset.Y + h / 2;
 
+        // вираховуємо які колонки і рядки видно на екрані щоб не малювати зайвого
         int colMin = (int)Math.Floor((-ox) / (double)CellSize) - 1;
         int colMax = (int)Math.Ceiling((w - ox) / (double)CellSize) + 1;
         int rowMin = (int)Math.Floor((-oy) / (double)CellSize) - 1;
         int rowMax = (int)Math.Ceiling((h - oy) / (double)CellSize) + 1;
 
+        // малюємо вертикальні лінії сітки
         using var gridPen = new Pen(Color.FromArgb(210, 210, 220));
         for (int c = colMin; c <= colMax; c++)
         {
             int px = ox + c * CellSize;
             g.DrawLine(gridPen, px, 0, px, h);
         }
+        // малюємо горизонтальні лінії сітки
         for (int r = rowMin; r <= rowMax; r++)
         {
             int py = oy + r * CellSize;
             g.DrawLine(gridPen, 0, py, w, py);
         }
 
+        // виділяємо центральні осі більш помітною лінією
         using var axisPen = new Pen(Color.FromArgb(180, 180, 200), 1.5f);
         g.DrawLine(axisPen, ox, 0, ox, h);
         g.DrawLine(axisPen, 0, oy, w, oy);
 
+        // малюємо всі фігури що є на видимій частині поля
         for (int row = rowMin; row <= rowMax; row++)
-        for (int col = colMin; col <= colMax; col++)
-        {
-            var state = _board.GetCell(row, col);
-            if (state == CellState.Empty) continue;
+            for (int col = colMin; col <= colMax; col++)
+            {
+                var state = _board.GetCell(row, col);
+                if (state == CellState.Empty) continue;
 
-            bool isWinCell = _winCells != null && _winCells.Contains((row, col));
-            DrawPiece(g, state, ox + col * CellSize, oy + row * CellSize, isWinCell);
-        }
+                // якщо клітинка є частиною виграшної лінії передаємо true для підсвітки
+                bool isWinCell = _winCells != null && _winCells.Contains((row, col));
+                DrawPiece(g, state, ox + col * CellSize, oy + row * CellSize, isWinCell);
+            }
     }
 
     private static void DrawPiece(Graphics g, CellState state, int px, int py, bool highlight)
     {
-        int m  = PieceMargin;
+        int m = PieceMargin;
         int sz = CellSize - m * 2;
-        var r  = new Rectangle(px + m, py + m, sz, sz);
+        var r = new Rectangle(px + m, py + m, sz, sz);
 
+        // якщо клітинка виграшна підсвічуємо її жовтим фоном
         if (highlight)
         {
             using var hBrush = new SolidBrush(Color.FromArgb(60, 255, 215, 0));
@@ -261,6 +317,7 @@ public partial class MainForm : Form
 
         if (state == CellState.X)
         {
+            // малюємо хрестик двома діагональними лініями
             int thickness = highlight ? 4 : 3;
             using var pen = new Pen(highlight ? Color.FromArgb(200, 40, 0) : Color.FromArgb(180, 0, 0), thickness);
             pen.StartCap = pen.EndCap = System.Drawing.Drawing2D.LineCap.Round;
@@ -269,6 +326,7 @@ public partial class MainForm : Form
         }
         else
         {
+            // малюємо нулик як еліпс
             int thickness = highlight ? 4 : 3;
             using var pen = new Pen(highlight ? Color.FromArgb(0, 80, 200) : Color.FromArgb(0, 60, 180), thickness);
             g.DrawEllipse(pen, r);
@@ -277,18 +335,22 @@ public partial class MainForm : Form
 
     private void BoardPanel_MouseDown(object? sender, MouseEventArgs e)
     {
+        // права кнопка миші починає панорамування поля
         if (e.Button == MouseButtons.Right)
         {
             _isPanning = true;
-            _panStart  = e.Location;
+            _panStart = e.Location;
             _boardPanel.Cursor = Cursors.Hand;
             return;
         }
 
+        // ігноруємо клік якщо гра завершена або зараз хід комп'ютера
         if (e.Button != MouseButtons.Left || _gameOver) return;
         if (_mode == GameMode.VsComputer && _currentPlayer != _humanPlayer) return;
 
+        // переводимо координати пікселів у координати клітинки
         var (row, col) = PixelToCell(e.Location);
+        // не дозволяємо хід на зайняту клітинку
         if (!_board.IsEmpty(row, col)) return;
 
         PlacePiece(row, col);
@@ -296,6 +358,7 @@ public partial class MainForm : Form
 
     private void BoardPanel_MouseMove(object? sender, MouseEventArgs e)
     {
+        // якщо панорамування активне зміщуємо камеру на різницю координат
         if (!_isPanning) return;
         _viewOffset = new Point(
             _viewOffset.X + e.X - _panStart.X,
@@ -306,6 +369,7 @@ public partial class MainForm : Form
 
     private void BoardPanel_MouseUp(object? sender, MouseEventArgs e)
     {
+        // відпускання правої кнопки завершує панорамування
         if (e.Button == MouseButtons.Right)
         {
             _isPanning = false;
@@ -315,6 +379,7 @@ public partial class MainForm : Form
 
     private void BoardPanel_MouseWheel(object? sender, MouseEventArgs e)
     {
+        // Ctrl + колесо прокручує поле горизонтально, без Ctrl вертикально
         if (ModifierKeys.HasFlag(Keys.Control))
             _viewOffset = new Point(_viewOffset.X + e.Delta / 4, _viewOffset.Y);
         else
@@ -322,10 +387,11 @@ public partial class MainForm : Form
         _boardPanel.Invalidate();
     }
 
+    // перетворює координати пікселя на екрані у координати клітинки поля
     private (int row, int col) PixelToCell(Point p)
     {
-        int w  = _boardPanel.ClientSize.Width;
-        int h  = _boardPanel.ClientSize.Height;
+        int w = _boardPanel.ClientSize.Width;
+        int h = _boardPanel.ClientSize.Height;
         int ox = _viewOffset.X + w / 2;
         int oy = _viewOffset.Y + h / 2;
         int col = (int)Math.Floor((p.X - ox) / (double)CellSize);
@@ -335,17 +401,21 @@ public partial class MainForm : Form
 
     private void PlacePiece(int row, int col)
     {
+        // ставимо фігуру поточного гравця на вказану клітинку
         _board.SetCell(row, col, _currentPlayer);
         _boardPanel.Invalidate();
 
+        // перевіряємо чи цей хід виграшний
         if (_board.CheckWin(row, col, _currentPlayer))
         {
+            // зберігаємо виграшні клітинки для підсвітки
             _winCells = _board.GetWinningCells(row, col, _currentPlayer);
             _gameOver = true;
             _boardPanel.Invalidate();
 
             if (_mode == GameMode.VsComputer)
             {
+                // визначаємо хто переміг і оновлюємо рахунок
                 if (_currentPlayer == _humanPlayer) { _scoreO++; _statusLabel.Text = "Ви перемогли!"; }
                 else { _scoreX++; _statusLabel.Text = "Комп'ютер переміг!"; }
             }
@@ -358,9 +428,11 @@ public partial class MainForm : Form
             return;
         }
 
+        // передаємо хід іншому гравцю
         _currentPlayer = _currentPlayer == CellState.X ? CellState.O : CellState.X;
         UpdateLabels();
 
+        // якщо тепер хід комп'ютера запускаємо таймер з невеликою затримкою для природності
         if (_mode == GameMode.VsComputer && _currentPlayer != _humanPlayer && !_gameOver)
         {
             var timer = new System.Windows.Forms.Timer { Interval = 120 };
@@ -372,6 +444,7 @@ public partial class MainForm : Form
     private void MakeComputerMove()
     {
         if (_gameOver) return;
+        // запитуємо у AI найкращий хід і одразу його виконуємо
         var (row, col) = AiEngine.GetBestMove(_board, _currentPlayer);
         PlacePiece(row, col);
     }
@@ -394,7 +467,7 @@ public partial class MainForm : Form
     {
         this.SuspendLayout();
         this.AutoScaleDimensions = new SizeF(6F, 13F);
-        this.AutoScaleMode       = AutoScaleMode.Font;
+        this.AutoScaleMode = AutoScaleMode.Font;
         this.ResumeLayout(false);
     }
 }

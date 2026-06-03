@@ -1,12 +1,12 @@
 namespace TicTacToe;
 
 /// <summary>
-/// Represents the game state for an infinite Tic-Tac-Toe board.
-/// Win condition: 5 in a row (classic "Gomoku" rule for infinite boards).
+/// Зберігає стан нескінченного ігрового поля для хрестиків-нуликів.
+/// Умова перемоги: 5 символів поспіль (правила Гомоку для нескінченного поля).
 /// </summary>
 public class GameBoard
 {
-    // Sparse storage: only occupied cells are kept
+    // розріджене сховище: зберігаємо лише зайняті клітинки
     private readonly Dictionary<(int row, int col), CellState> _cells = new();
 
     public int WinLength { get; set; } = 5;
@@ -29,13 +29,13 @@ public class GameBoard
 
     public void Clear() => _cells.Clear();
 
-    /// <summary>Returns all occupied cells, plus their neighbours, as candidate move positions.</summary>
+    /// <summary>Повертає всі зайняті клітинки разом із їх сусідами як можливі ходи.</summary>
     public IEnumerable<(int row, int col)> GetCandidateMoves()
     {
         var candidates = new HashSet<(int, int)>();
         if (_cells.Count == 0)
         {
-            // First move: suggest centre
+            // перший хід пропонуємо у центр поля
             candidates.Add((0, 0));
             return candidates;
         }
@@ -43,21 +43,21 @@ public class GameBoard
         foreach (var (pos, _) in _cells)
         {
             for (int dr = -2; dr <= 2; dr++)
-            for (int dc = -2; dc <= 2; dc++)
-            {
-                if (dr == 0 && dc == 0) continue;
-                var candidate = (pos.row + dr, pos.col + dc);
-                if (IsEmpty(candidate.Item1, candidate.Item2))
-                    candidates.Add(candidate);
-            }
+                for (int dc = -2; dc <= 2; dc++)
+                {
+                    if (dr == 0 && dc == 0) continue;
+                    var candidate = (pos.row + dr, pos.col + dc);
+                    if (IsEmpty(candidate.Item1, candidate.Item2))
+                        candidates.Add(candidate);
+                }
         }
         return candidates;
     }
 
-    /// <summary>Check if placing <paramref name="player"/> at (row,col) wins the game.</summary>
+    /// <summary>Перевіряє чи хід гравця на клітинку (row,col) є виграшним.</summary>
     public bool CheckWin(int row, int col, CellState player)
     {
-        int[][] directions = { new[]{0,1}, new[]{1,0}, new[]{1,1}, new[]{1,-1} };
+        int[][] directions = { new[] { 0, 1 }, new[] { 1, 0 }, new[] { 1, 1 }, new[] { 1, -1 } };
         foreach (var d in directions)
         {
             int count = 1;
@@ -82,10 +82,10 @@ public class GameBoard
         return count;
     }
 
-    /// <summary>Returns the winning cells for a winner at (row,col), or null if no win.</summary>
+    /// <summary>Повертає список клітинок що утворили виграшну лінію, або null якщо виграшу немає.</summary>
     public List<(int, int)>? GetWinningCells(int row, int col, CellState player)
     {
-        int[][] directions = { new[]{0,1}, new[]{1,0}, new[]{1,1}, new[]{1,-1} };
+        int[][] directions = { new[] { 0, 1 }, new[] { 1, 0 }, new[] { 1, 1 }, new[] { 1, -1 } };
         foreach (var d in directions)
         {
             var line = new List<(int, int)> { (row, col) };
@@ -113,10 +113,11 @@ public class GameBoard
 public enum CellState { Empty, X, O }
 
 /// <summary>
-/// AI engine using a heuristic scoring approach, looking 1-2 moves ahead.
+/// Рушій штучного інтелекту на основі евристичного оцінювання з переглядом на 1-2 ходи вперед.
 /// </summary>
 public static class AiEngine
 {
+    // генератор випадкових чисел для вибору серед рівноцінних ходів
     private static readonly Random _rng = new();
 
     public static (int row, int col) GetBestMove(GameBoard board, CellState aiPlayer)
@@ -131,7 +132,7 @@ public static class AiEngine
 
         foreach (var (row, col) in candidates)
         {
-            // Immediate win
+            // перевіряємо чи є негайний виграшний хід
             board.SetCell(row, col, aiPlayer);
             if (board.CheckWin(row, col, aiPlayer))
             {
@@ -140,7 +141,7 @@ public static class AiEngine
             }
             board.SetCell(row, col, CellState.Empty);
 
-            // Block opponent's immediate win
+            // перевіряємо чи потрібно заблокувати негайний виграш суперника
             board.SetCell(row, col, humanPlayer);
             if (board.CheckWin(row, col, humanPlayer))
             {
@@ -150,13 +151,13 @@ public static class AiEngine
             board.SetCell(row, col, CellState.Empty);
         }
 
-        // Score each candidate with 2-ply lookahead
+        // оцінюємо кожен хід з переглядом на 2 напівходи
         foreach (var (row, col) in candidates)
         {
             board.SetCell(row, col, aiPlayer);
             int score = ScorePosition(board, row, col, aiPlayer, humanPlayer);
 
-            // Look 1 move ahead for opponent
+            // дивимося на один хід суперника вперед
             int opponentBest = int.MinValue;
             foreach (var (r2, c2) in board.GetCandidateMoves())
             {
@@ -166,7 +167,7 @@ public static class AiEngine
                 board.SetCell(r2, c2, CellState.Empty);
             }
 
-            // Combined score: own attack minus opponent's best reply
+            // підсумковий бал: власна атака мінус половина найкращої відповіді суперника
             int totalScore = score - opponentBest / 2;
             board.SetCell(row, col, CellState.Empty);
 
@@ -182,33 +183,34 @@ public static class AiEngine
             }
         }
 
+        // якщо кілька ходів з однаковим балом обираємо випадковий
         return bestMoves[_rng.Next(bestMoves.Count)];
     }
 
-    /// <summary>Heuristic score for the board state from <paramref name="player"/>'s perspective.</summary>
+    /// <summary>Евристична оцінка стану поля з точки зору гравця player.</summary>
     private static int ScorePosition(GameBoard board, int lastRow, int lastCol, CellState player, CellState opponent)
     {
         int score = 0;
 
-        // Score all lines passing through the candidate area
-        int[][] directions = { new[]{0,1}, new[]{1,0}, new[]{1,1}, new[]{1,-1} };
-        var evaluated = new HashSet<(int,int,int,int)>();
+        // оцінюємо всі лінії що проходять через область навколо останнього ходу
+        int[][] directions = { new[] { 0, 1 }, new[] { 1, 0 }, new[] { 1, 1 }, new[] { 1, -1 } };
+        var evaluated = new HashSet<(int, int, int, int)>();
 
         var toCheck = new List<(int, int)> { (lastRow, lastCol) };
         for (int dr = -2; dr <= 2; dr++)
-        for (int dc = -2; dc <= 2; dc++)
-            toCheck.Add((lastRow + dr, lastCol + dc));
+            for (int dc = -2; dc <= 2; dc++)
+                toCheck.Add((lastRow + dr, lastCol + dc));
 
         foreach (var (row, col) in toCheck)
-        foreach (var d in directions)
-        {
-            // Canonical start of line
-            int sr = row - d[0] * 4, sc = col - d[1] * 4;
-            var key = (sr, sc, d[0], d[1]);
-            if (!evaluated.Add(key)) continue;
+            foreach (var d in directions)
+            {
+                // канонічний початок лінії щоб не оцінювати одну лінію двічі
+                int sr = row - d[0] * 4, sc = col - d[1] * 4;
+                var key = (sr, sc, d[0], d[1]);
+                if (!evaluated.Add(key)) continue;
 
-            score += EvaluateLine(board, sr, sc, d[0], d[1], player, opponent);
-        }
+                score += EvaluateLine(board, sr, sc, d[0], d[1], player, opponent);
+            }
 
         return score;
     }
@@ -217,6 +219,7 @@ public static class AiEngine
         CellState player, CellState opponent)
     {
         int score = 0;
+        // перебираємо всі вікна розміром WinLength вздовж лінії
         for (int offset = 0; offset <= 4; offset++)
         {
             int playerCount = 0, emptyCount = 0;
@@ -228,17 +231,19 @@ public static class AiEngine
                 var cell = board.GetCell(r, c);
                 if (cell == player) playerCount++;
                 else if (cell == CellState.Empty) emptyCount++;
+                // якщо в лінії є фігура суперника вона заблокована
                 else { blocked = true; break; }
             }
 
+            // нараховуємо бали лише за незаблоковані лінії
             if (!blocked)
             {
                 score += playerCount switch
                 {
-                    4 => 10000,
-                    3 => 500,
-                    2 => 50,
-                    1 => 5,
+                    4 => 10000,  // майже виграшна лінія
+                    3 => 500,    // три в ряд
+                    2 => 50,     // два в ряд
+                    1 => 5,      // одна фігура
                     _ => 0
                 };
             }
